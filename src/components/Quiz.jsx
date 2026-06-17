@@ -103,13 +103,13 @@ const Quiz = () => {
 
 
   // usetate trả về một mảng đúng 2 ptu option và setOption: cú pháp option là giá trị hiện tại state còn setOption là callback đổi giá trị state, cú pháp này gọi là array destructuring, tức là phân rã thành 2 biến riêng
-  const [optionSelected, setOptionSelected] = useState();
+  const [optionSelected, setOptionSelected] = useState("");
 
 
   // tạo một mảng lưu chỉ số đáp án, ví dụ user click đáp án đầu tiên chúng ta lưu số 0 => trong mảng số 0 chỉ số item đầu tiên, mảng này dùng trong hậu trường lưu câu trả lời user nó ko hiện trên giao diện, dùng state vì cứ khi nào component render lại thì giá trị biến thường sẽ được reset lại mặc định, nếu rời biến ra ngoài thì component có render lại nó ko ảnh hưởng, nhưng ko nên đặt user  answer ở ngoài component vì lúc này nó thành global variable biến toàn cầu giá trị nó sẽ được dùng chung tất cả quiz component, tốt nhất lưu giá trị useranswer trong state vì state sẽ bảo lưu giá trị của dữ liệu, khi component render lại 
   
   const [userAnswers, setUserAnswers] 
-  = useState(Array.from({length: quizData})); // giá trị mặc định state là arr.from({lenght: quizData}) nghĩa là mảng có chiều dài bằng số câu hỏi trong quiz 
+  = useState(Array.from({length: quizData.length})); // giá trị mặc định state là arr.from({lenght: quizData}) nghĩa là mảng có chiều dài bằng số câu hỏi trong quiz 
 
 
   // tạo một biến lưu lại câu hỏi hiện tại. và state này sẽ có tên là currentQuestion + giá trị mặc định là 0 là câu hỏi đầu tiên trong mảng
@@ -121,6 +121,8 @@ const Quiz = () => {
   const [isQuizEnded, setIsQuizEnded] = useState(false);
 
 
+  // tính điểm số người dùng, biến chứa điểm thực sự, tạo state lưu giá trị điểm score giá trị mặc định là 0. mỗi khi người dùng chọn đáp án sẽ tính lại điểm của score, cứ khi nào optionselected thay đổi thì mình sẽ ktra xem đáp án được chọn có đúng không. 
+  const [score, setScore] = useState(0);
 
   // let lưu biến đáp án đã chọn vào một biến  
   // let optionSelected = "abc";
@@ -128,6 +130,11 @@ const Quiz = () => {
 
   // hàm handleSelectOption => gọi lại nó ở trong onclick truyền lại option
   const handleSelectOption = (option, index) => {
+
+    // tính điểm
+    if (option === quizData[currentQuestion].answer) {
+      setScore((prev) => prev + 1);
+    }
 
     // update lại giá trị option ở đây nhưng khi click UI nó ko thay đổi vì html Dom ko cập nhật biến thường. nó chỉ cập nhật khi bạn thông báo cho nó có trạng thái thay đổi nghĩa là state, state là biến đặc biệt trong react để thông báo trạng thái giao diện khi state thay đổi thì react mới cập nhật UI còn biến thường react sẽ ko tự cập nhật, nếu muốn UI quiz phản ứng sự lựa chọn user thì phải dùng đến state để biến thường -> thành state khi đó UI nó sẽ cập nhật khi click đáp án 
 
@@ -142,10 +149,10 @@ const Quiz = () => {
     //người dùng chọn một đáp án thì mình muốn lưu câu trả lời đó vào đúng vị trí trong user answer, ví dụ: current question đang là 0 và user chọn đáp án đầu tiên thì mình muốn update mảng user answer thành thành[0, null, ...], vì useranswer là state, chúng ta ko thể trực tiếp sửa được giá trị của user, phải tạo mảng mới xong gán mảng mới trong set user answer, cho nên đầu tiên sẽ tạo mảng copy của mảng user answer, dùng spread operator copy mảng cũ sang => cập nhật đáp án mới vào, thay giá trị ở current question mà user đã chọn có nghĩa là option sau đó gọi set user answer bỏ cái mảng mới vào. nguyên tắc này rất quan trọng khi làm việc vs state là đối tượng hoặc là array trong react. bạn nhớ tạo bảng copy mới cập nhật thay đổi mới vào mảng copy rồi dùng set state để cập nhật state mới, thay vì lưu nguyên cái dáp án mình chỉ muốn lưu số thứ tự của đáp án thôi. cho nên cần tham số index truyền vào chỉ số của đáp án 
     const newUserAnswer = [...userAnswers];
     newUserAnswer[currentQuestion] = index;
-    setCurrentQuestion[newUserAnswer]
+    setUserAnswers[newUserAnswer]
 
 
-  }
+  };
 
   // chức năng quan trọng cho dự án này đó là điều hướng. mục đích là cho phép user chuyển qua qua câu hỏi này sang câu hỏi khác, setCurrentQuestion 2 nút quay lại và kế tiếp, tạo 2 biến goNext và goBack
 
@@ -185,12 +192,12 @@ const Quiz = () => {
       setCurrentQuestion((prev) => prev + 1);
     }
 
-  }
+  };
 
   const goBack = () => {
     // cho phép nó lùi lại khi currentquestion lớn hơn 0
     if(currentQuestion > 0){
-      setCurrentQuestion(prev => prev - 1);
+      setCurrentQuestion((prev) => prev - 1);
     }
 
     // cập nhật lại giá trị của option selected. mỗi khi qua câu hỏi khác, logic bấm vào nút kế tiếp hay quay lại thì mình ktra xem câu này đã được trả lời chưa. vì chúng ta có giữ danh sách câu trả lời của người dùng cho nên check xem câu này đã được trả lời chưa, trả lời rồi thì option selected đổi thành đáp án người dùng trả lời. còn nếu chưa thì chúng ta reset lại option thành chuỗi rỗng
@@ -209,6 +216,22 @@ const Quiz = () => {
 
 
 
+  // khi làm lại quiz => tất cả state mình phải quay lại trạng thái ban đầu giống như mới mở ứng dụng. lúc đấy currentQuestion trở về 0 + userAnswer trở về mảng rỗng và isQuizEnded là false, nói chung state mình tạo ra phải về trạng thái ban đầu quiz được reset. nhưng mà vấn đề là nút Làm lại bên result còn state ở bên quiz, làm sao truyền thông tin từ result về lại quiz là người dùng bấm vào rút, nói chung làm sao truyền thông tin từ component con ngược lại về component cha, cách dễ nhất giải quyết là chúng ta ko truyền dữ liệu con ngược lên cha mà ở trong component chúng ta viết logic cần. xong truyền cái logic đó xuống ocon thông qua prop. chính xác một hàm gọi lại qua prop và result sẽ chạy lại hàm gọi là hàm này khi mà người dùng bấm vào nút. viết func restart trong quiz component và logic đơn giản, sẽ reset tất cả cái state trong quiz và mình sẽ dùng controlspace tìm tên state
+  const restartQuiz = () => {
+    setCurrentQuestion(0);
+    setIsQuizEnded(false);
+    setOptionSelected("");
+    setScore(0);
+    setUserAnswers(Array.from({length: quizData.length}));
+  };
+
+  // hàm xem lại quiz
+  const rewatchQuiz = () => {
+    setCurrentQuestion(0);
+    setIsQuizEnded(false);
+  };
+
+
   // ở đây logic đơn giản + 1 và - 1 bốn lần này cũng đúng, nhưng với logic phức tạp hơn và phải dùng giá trị của currentquestion nhiều hơn sẽ rất dễ gây ra lỗi mã nếu quên + 1 hoặc - 1 thì lỗi. cách fix ở đây dùng cái hook khác là useEffect có nhiệm vụ theo dõi sự thay đổi của một hay nhiều state hoăc props. khi nhận thấy sự thay đổi thì useEffect sẽ chạy phần logic bạn chỉ định, đúng với trường hợp muốn theo dõi giá trị của currentquestion nó thay đổi sẽ update lại optionselected tương ứng
 
   useEffect(() => {
@@ -225,14 +248,26 @@ const Quiz = () => {
     } else {
       setOptionSelected("");
     }
-  }, [currentQuestion, userAnswers]) //khai báo state theo dõi là currentQuestion + userAnswers
+  }, [currentQuestion, userAnswers]); //khai báo state theo dõi là currentQuestion + userAnswers
 
+  // nếu đúng tăng lên 1, theo dõi dữ liệu cần dùng useEffect logic đơn giản thôi. if(optionSelected === quizData[currentQuestion].answer){setScore(prev => prev + 1 )}, và state ở đây theo dõi là optionselected, và cập nhật lại giá trị truyền vào của score và totalQuestionNum ở result phía dưới
+
+  // useEffect(() => {
+  //   if(optionSelected === quizData[currentQuestion].answer) { 
+  //     setScore((prev) => prev + 1) 
+  //   }
+  // }, [optionSelected]);
 
 
   // nếu quiz kết thúc sẽ hiển thị kết quả. thay vì hiển thị giao diện bài quiz, điều kiện sẽ là if isQuizEnded return giao diện <Results/> import.
   if(isQuizEnded){
-    return <Results/>;
-  }
+    // truyền điểm thông qua score và số câu hỏi là totalQuestionNum
+    return <Results score={score} 
+    totalQuestionNum={quizData.length}
+    restartQuiz={restartQuiz}
+    rewatchQuiz={rewatchQuiz}
+    />;
+  };
 
 
   return (
